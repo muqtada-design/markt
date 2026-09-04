@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User } from 'firebase/auth';
+import { User, signInAnonymously } from 'firebase/auth';
 import { subscribeToAuthChanges, logoutUser } from '../services/authService';
-import { isFirebaseConfigured } from '../firebase/config';
+import { auth, isFirebaseConfigured } from '../firebase/config';
 
 interface AuthContextType {
   user: User | null;
@@ -26,10 +26,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = subscribeToAuthChanges((currentUser) => {
       setUser(currentUser);
       setLoading(false);
+
+      // تسجيل دخول مجهول تلقائياً خلف الكواليس إذا لم يكن المستخدم مسجلاً
+      if (!currentUser && isConfigured) {
+        signInAnonymously(auth).catch((err) => {
+          console.warn('تنبيه: فشل تسجيل الدخول المجهول التلقائي:', err);
+        });
+      }
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [isConfigured]);
 
   const handleLogout = async () => {
     await logoutUser();
