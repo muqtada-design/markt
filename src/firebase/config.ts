@@ -4,15 +4,16 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDvtO7T9Pdipx22rjCp1XSeHB8cD0mwz0c",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "markali-ec8d5.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "markali-ec8d5",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "markali-ec8d5.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "41277156729",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:41277156729:web:277a42d5d0ac0029e9d3a8",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-6YE4K1CG3B",
 };
 
-// التحقق مما إذا كانت إعدادات Firebase مكتملة
+// التحقق من اكتمال الإعدادات
 export const isFirebaseConfigured = (): boolean => {
   return Boolean(
     firebaseConfig.apiKey &&
@@ -22,7 +23,7 @@ export const isFirebaseConfigured = (): boolean => {
   );
 };
 
-// تهيئة تطبيق Firebase مرة واحدة فقط
+// تهيئة تطبيق Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 export const auth = getAuth(app);
