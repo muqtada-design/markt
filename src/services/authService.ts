@@ -15,7 +15,9 @@ export const loginUser = async (email: string, pass: string): Promise<User> => {
     return userCredential.user;
   } catch (error: any) {
     console.error('فشل تسجيل الدخول:', error);
-    if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+    if (error.code === 'auth/configuration-not-found' || error.code === 'auth/operation-not-allowed') {
+      throw new Error('لم يتم تفعيل طريقة تسجيل الدخول (Email/Password) في لوحة التحكم Firebase لمشروع markali-ec8d5 بعد. يرجى تفعيلها من Firebase Console -> Authentication -> Sign-in method.');
+    } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
       throw new Error('البريد الإلكتروني أو كلمة المرور غير صحيحة');
     } else if (error.code === 'auth/invalid-email') {
       throw new Error('صيغة البريد الإلكتروني غير صحيحة');
