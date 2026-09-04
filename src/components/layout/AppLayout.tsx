@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { AlertCircle } from 'lucide-react';
 
 export const AppLayout: React.FC = () => {
-  const { user, isConfigured } = useAuth();
+  const { isConfigured } = useAuth();
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -28,7 +28,7 @@ export const AppLayout: React.FC = () => {
         <Outlet />
       </main>
 
-      {user && <BottomNav />}
+      <BottomNav />
     </div>
   );
 };

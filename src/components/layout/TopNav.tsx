@@ -1,21 +1,9 @@
 import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { QrCode, LogOut, LayoutDashboard, Package, PlusCircle, ScanLine } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { Link, useLocation } from 'react-router-dom';
+import { QrCode, LayoutDashboard, Package, PlusCircle, ScanLine } from 'lucide-react';
 
 export const TopNav: React.FC = () => {
-  const { user, logout } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/login');
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -26,44 +14,45 @@ export const TopNav: React.FC = () => {
         <span>Smart Barcode</span>
       </Link>
 
-      {user && (
-        <nav className="nav-actions">
-          <div style={{ display: 'none' }} className="desktop-links">
-            <Link
-              to="/dashboard"
-              className={`btn btn-secondary ${isActive('/dashboard') ? 'active-nav' : ''}`}
-            >
-              <LayoutDashboard size={18} />
-              الرئيسية
-            </Link>
-            <Link
-              to="/scan"
-              className={`btn btn-primary ${isActive('/scan') ? 'active-nav' : ''}`}
-            >
-              <ScanLine size={18} />
-              قراءة باركود
-            </Link>
-            <Link
-              to="/products"
-              className={`btn btn-secondary ${isActive('/products') ? 'active-nav' : ''}`}
-            >
-              <Package size={18} />
-              المنتجات
-            </Link>
-            <Link
-              to="/products/add"
-              className={`btn btn-secondary ${isActive('/products/add') ? 'active-nav' : ''}`}
-            >
-              <PlusCircle size={18} />
-              إضافة منتج
-            </Link>
-          </div>
+      <nav className="nav-actions">
+        <div style={{ display: 'flex', gap: '8px' }} className="desktop-links">
+          <Link
+            to="/dashboard"
+            className={`btn ${isActive('/dashboard') ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ padding: '8px 14px', fontSize: '0.88rem' }}
+          >
+            <LayoutDashboard size={16} />
+            <span className="hide-mobile">الرئيسية</span>
+          </Link>
 
-          <button onClick={handleLogout} className="btn btn-secondary btn-icon" title="تسجيل الخروج">
-            <LogOut size={20} color="var(--danger)" />
-          </button>
-        </nav>
-      )}
+          <Link
+            to="/scan"
+            className={`btn ${isActive('/scan') ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ padding: '8px 14px', fontSize: '0.88rem' }}
+          >
+            <ScanLine size={16} />
+            <span className="hide-mobile">قراءة باركود</span>
+          </Link>
+
+          <Link
+            to="/products"
+            className={`btn ${isActive('/products') ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ padding: '8px 14px', fontSize: '0.88rem' }}
+          >
+            <Package size={16} />
+            <span className="hide-mobile">المنتجات</span>
+          </Link>
+
+          <Link
+            to="/products/add"
+            className={`btn ${isActive('/products/add') ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ padding: '8px 14px', fontSize: '0.88rem' }}
+          >
+            <PlusCircle size={16} />
+            <span className="hide-mobile">إضافة منتج</span>
+          </Link>
+        </div>
+      </nav>
     </header>
   );
 };
