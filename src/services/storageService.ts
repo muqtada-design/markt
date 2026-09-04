@@ -1,37 +1,22 @@
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { storage } from '../firebase/config';
-import { compressProductImage } from '../utils/imageCompressor';
+import { compressAndConvertToBase64 } from '../utils/imageCompressor';
 
 /**
- * رفع صورة المنتج بعد ضغطها وإرجاع رابط التنزيل
+ * تحويل وضغط صورة المنتج مباشرة لـ Base64
+ * هذا الخيار مجاني 100% ولا يتطلب أي اشتراك في Firebase Storage ولا أي بطاقة فيزا!
  */
-export async function uploadProductImage(productId: string, file: File): Promise<string> {
+export async function uploadProductImage(_productId: string, file: File): Promise<string> {
   try {
-    // ضغط الصورة قبل الرفع
-    const compressed = await compressProductImage(file);
-    const storageRef = ref(storage, `products/${productId}/image`);
-    
-    // رفع الصورة إلى Storage
-    const snapshot = await uploadBytes(storageRef, compressed);
-    
-    // الحصول على رابط التحميل
-    const downloadUrl = await getDownloadURL(snapshot.ref);
-    return downloadUrl;
+    const base64DataUrl = await compressAndConvertToBase64(file);
+    return base64DataUrl;
   } catch (error: any) {
-    console.error('خطأ في رفع صورة المنتج:', error);
-    throw new Error('فشل رفع الصورة إلى Firebase Storage. يرجى التحقق من الاتصال بالإنترنت ومحاولة الرفع مجدداً.');
+    console.error('خطأ في معالجة الصورة:', error);
+    throw new Error('فشل معالجة الصورة. يرجى اختيار صورة أخرى ومحاولة الحفظ مجدداً.');
   }
 }
 
 /**
- * حذف صورة المنتج من Firebase Storage
+ * حذف صورة المنتج (لا يلزم حرق طلبات لأن الصورة مخزنة مجاناً مع المستند)
  */
-export async function deleteProductImage(productId: string): Promise<void> {
-  try {
-    const storageRef = ref(storage, `products/${productId}/image`);
-    await deleteObject(storageRef);
-  } catch (error) {
-    // قد لا توجد صورة أو تم حذفها بالفعل
-    console.warn('لم يتم حذف الصورة من Storage أو غير موجودة:', error);
-  }
+export async function deleteProductImage(_productId: string): Promise<void> {
+  // لا يلزم إجراء حذف منفصل
 }
