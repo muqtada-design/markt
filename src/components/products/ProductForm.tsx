@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ProductFormData } from '../../types/product';
-import { Camera, Upload, ScanLine, AlertCircle, Save } from 'lucide-react';
+import { Camera, Upload, ScanLine, AlertCircle, Save, Link as LinkIcon, Image as ImageIcon } from 'lucide-react';
 import { formatPrice } from '../../utils/formatters';
 import { CameraScannerModal } from '../scanner/CameraScannerModal';
 
@@ -27,7 +27,15 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const [price, setPrice] = useState<string>(
     initialData?.price !== undefined ? String(initialData.price) : ''
   );
+
+  // نمط إضافة الصورة (رفع/التقاط من الجهاز أو رابط صورة مباشر)
+  const isInitialUrl = initialData?.imageUrl && !initialData.imageUrl.startsWith('data:');
+  const [imageMode, setImageMode] = useState<'upload' | 'url'>(isInitialUrl ? 'url' : 'upload');
+
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageUrlInput, setImageUrlInput] = useState<string>(
+    isInitialUrl ? initialData.imageUrl! : ''
+  );
   const [imagePreview, setImagePreview] = useState<string | null>(initialData?.imageUrl || null);
 
   const [formError, setFormError] = useState<string | null>(null);
@@ -59,6 +67,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     }
   };
 
+  const handleUrlInputChange = (val: string) => {
+    setImageUrlInput(val);
+    setImagePreview(val.trim() ? val.trim() : null);
+  };
+
   const handleBarcodeScanned = (scannedCode: string) => {
     setBarcode(scannedCode);
     setIsScannerOpen(false);
@@ -81,8 +94,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       setFormError('يرجى إدخال سعر صالح (أرقام فقط)');
       return;
     }
-    if (!imagePreview && !imageFile) {
-      setFormError('صورة المنتج مطلوبة');
+
+    if (imageMode === 'upload' && !imagePreview && !imageFile) {
+      setFormError('صورة المنتج مطلوبة (يرجى اختيار صورة من الجهاز أو إضافة رابط مباشر)');
+      return;
+    }
+    if (imageMode === 'url' && !imageUrlInput.trim() && !imagePreview) {
+      setFormError('يرجى إدخال رابط صورة مباشر أو التبديل لخيار رفع الصورة');
       return;
     }
 
@@ -91,7 +109,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         name: name.trim(),
         barcode: barcode.trim(),
         price: Number(price),
-        imageFile,
+        imageFile: imageMode === 'upload' ? imageFile : null,
+        imageUrlInput: imageMode === 'url' ? imageUrlInput.trim() : '',
       });
     } catch (err: any) {
       setFormError(err.message || 'حدث خطأ أثناء حفظ البيانات');
@@ -108,60 +127,136 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           </div>
         )}
 
-        {/* 1. Product Image Picker */}
+        {/* 1. Product Image Picker with Dual Mode (Upload/Camera vs Direct URL) */}
         <div className="form-group">
-          <label className="form-label">صورة المنتج *</label>
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            style={{
-              width: '100%',
-              height: '200px',
-              borderRadius: 'var(--radius-lg)',
-              border: '2px dashed var(--border-color)',
-              backgroundColor: 'var(--bg-surface)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              overflow: 'hidden',
-              position: 'relative',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            {imagePreview ? (
-              <>
-                <img
-                  src={imagePreview}
-                  alt="معاينة المنتج"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
+          <label className="form-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>صورة المنتج *</span>
+          </label>
+
+          {/* Mode Switcher Tabs */}
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setImageMode('upload');
+                setFormError(null);
+              }}
+              className={`btn ${imageMode === 'upload' ? 'btn-primary' : 'btn-secondary'}`}
+              style={{ flex: 1, padding: '8px 12px', fontSize: '0.85rem' }}
+            >
+              <Camera size={16} />
+              <span>رفع / كاميرا الجهاز</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setImageMode('url');
+                setFormError(null);
+              }}
+              className={`btn ${imageMode === 'url' ? 'btn-primary' : 'btn-secondary'}`}
+              style={{ flex: 1, padding: '8px 12px', fontSize: '0.85rem' }}
+            >
+              <LinkIcon size={16} />
+              <span>رابط صورة مباشر (URL)</span>
+            </button>
+          </div>
+
+          {/* Mode 1: File Upload / Camera Capture */}
+          {imageMode === 'upload' && (
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                width: '100%',
+                height: '200px',
+                borderRadius: 'var(--radius-lg)',
+                border: '2px dashed var(--border-color)',
+                backgroundColor: 'var(--bg-surface)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                overflow: 'hidden',
+                position: 'relative',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {imagePreview ? (
+                <>
+                  <img
+                    src={imagePreview}
+                    alt="معاينة المنتج"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    onError={() => {
+                      setFormError('فشل تحميل المعاينة للصورة');
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: '10px',
+                      backgroundColor: 'rgba(0,0,0,0.75)',
+                      color: '#fff',
+                      padding: '6px 12px',
+                      borderRadius: 'var(--radius-md)',
+                      fontSize: '0.8rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <Camera size={14} />
+                    تغيير الصورة
+                  </div>
+                </>
+              ) : (
+                <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '16px' }}>
+                  <Upload size={36} color="var(--primary)" style={{ marginBottom: '8px' }} />
+                  <p style={{ fontWeight: 700, fontSize: '0.95rem' }}>اختر صورة من الجهاز أو التقط من الكاميرا</p>
+                  <span style={{ fontSize: '0.8rem' }}>انقر هنا لرفع الصورة</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Mode 2: Direct Image URL */}
+          {imageMode === 'url' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <input
+                type="url"
+                className="form-input"
+                placeholder="ضع رابط الصورة المباشر (مثال: https://example.com/image.jpg)"
+                value={imageUrlInput}
+                onChange={(e) => handleUrlInputChange(e.target.value)}
+                style={{ direction: 'ltr', textAlign: 'left' }}
+              />
+
+              {/* Live Preview for URL */}
+              {imagePreview && (
                 <div
                   style={{
-                    position: 'absolute',
-                    bottom: '10px',
-                    backgroundColor: 'rgba(0,0,0,0.75)',
-                    color: '#fff',
-                    padding: '6px 12px',
-                    borderRadius: 'var(--radius-md)',
-                    fontSize: '0.8rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
+                    width: '100%',
+                    height: '180px',
+                    borderRadius: 'var(--radius-lg)',
+                    overflow: 'hidden',
+                    backgroundColor: 'var(--bg-surface)',
+                    border: '1px solid var(--border-color)',
                   }}
                 >
-                  <Camera size={14} />
-                  تغيير الصورة
+                  <img
+                    src={imagePreview}
+                    alt="معاينة الصورة"
+                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = 'none';
+                    }}
+                  />
                 </div>
-              </>
-            ) : (
-              <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '16px' }}>
-                <Upload size={36} color="var(--primary)" style={{ marginBottom: '8px' }} />
-                <p style={{ fontWeight: 700, fontSize: '0.95rem' }}>اختر صورة من الجهاز أو التقط من الكاميرا</p>
-                <span style={{ fontSize: '0.8rem' }}>انقر هنا لرفع الصورة</span>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
+
           <input
             type="file"
             ref={fileInputRef}
@@ -179,7 +274,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             id="product-name"
             type="text"
             className="form-input"
-            placeholder="مثال: شامبو هيد اند شولدرز 400 مل"
+            placeholder="مثال: عصير رند عنب 250 مل"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -243,7 +338,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             style={{ padding: '14px', fontSize: '1.05rem' }}
           >
             {isSubmitting ? (
-              <span>جاري الحفظ والرفع...</span>
+              <span>جاري الحفظ والمعالجة...</span>
             ) : (
               <>
                 <Save size={20} />

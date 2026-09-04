@@ -13,6 +13,7 @@ export interface ProductFormData {
   barcode: string;
   price: number | string;
   imageFile?: File | null;
+  imageUrlInput?: string;
 }
 
 export interface ProductStats {

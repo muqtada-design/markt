@@ -153,8 +153,8 @@ export async function addProduct(data: ProductFormData): Promise<Product> {
   const newDocRef = doc(collection(db, PRODUCTS_COLLECTION));
   const productId = newDocRef.id;
 
-  // 3. رفع الصورة إلى Storage
-  const imageUrl = await uploadProductImage(productId, data.imageFile);
+  // 3. رفع الصورة أو الحصول على رابطها
+  const imageUrl = await uploadProductImage(productId, data.imageFile, data.imageUrlInput);
 
   const now = Date.now();
   const productDocData = {
@@ -202,9 +202,9 @@ export async function updateProduct(
 
   let imageUrl = currentImageUrl;
 
-  // 2. إذا تم رفع صورة جديدة
-  if (data.imageFile) {
-    imageUrl = await uploadProductImage(id, data.imageFile);
+  // 2. إذا تم رفع صورة جديدة أو كتابة رابط صورة جديد
+  if (data.imageFile || data.imageUrlInput) {
+    imageUrl = await uploadProductImage(id, data.imageFile, data.imageUrlInput);
   }
 
   const docRef = doc(db, PRODUCTS_COLLECTION, id);
